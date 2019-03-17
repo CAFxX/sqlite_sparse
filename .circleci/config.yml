@@ -17,16 +17,16 @@ jobs:
           
       - run:
           name: Test
-          command: bash -c |
-            sqlite3 test.sqlite 'CREATE TABLE t (a INT, b TEXT)'
-            sqlite3 test.sqlite 'INSERT INTO t (a, b) VALUES (1, "AAAA")'
-            for i in {1..5}
+          command: |
+            sqlite3 test.sqlite 'CREATE TABLE t (a INT, b TEXT)';
+            sqlite3 test.sqlite 'INSERT INTO t (a, b) VALUES (1, "AAAA")';
+            for i in {1..5};
             do
-              sqlite3 test.sqlite 'INSERT INTO t (a, b) SELECT RANDOM(), b FROM t'
-            done
-            sqlite3 test.sqlite 'DELETE FROM t ORDER BY RANDOM() LIMIT (SELECT COUNT(*) FROM t)*9/10'
-            stat test.sqlite
-            ./sqlite_sparse test.sqlite
-            stat test.sqlite
+              sqlite3 test.sqlite 'INSERT INTO t (a, b) SELECT RANDOM(), b FROM t';
+            done;
+            sqlite3 test.sqlite 'DELETE FROM t ORDER BY RANDOM() LIMIT (SELECT COUNT(*) FROM t)*9/10';
+            stat test.sqlite;
+            ./sqlite_sparse test.sqlite;
+            stat test.sqlite;
             sqlite3 test.sqlite 'PRAGMA check_integrity'
             
