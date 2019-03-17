@@ -4,7 +4,7 @@ workflows:
   build:
     jobs:
       - build-linux
-      - build-windows
+
 jobs:
   build-linux:
     docker:
