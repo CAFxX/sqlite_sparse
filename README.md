@@ -34,3 +34,8 @@ sqlite_sparse file.sqlite
 # ensure we did not corrupt the database
 sqlite3 file.sqlite "pragma integrity_check"
 ```
+
+## TODO
+- This is just a PoC; ideally SQLite should learn to do this automatically if supported by the filesystem.
+- Additional platforms: Windows should be doable. Mac OS does not support sparse files so this can't be made to work.
+- Link against sqlite so that integrity checks and backups can be made automatically by sqlite_sparse.
