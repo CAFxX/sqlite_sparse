@@ -43,8 +43,16 @@
 #include <winsock2.h>
 #include <windows.h>
 #include <stdint.h>
+#include <io.h>
 #elif defined(__linux__)
 #include <arpa/inet.h>
+#endif
+
+#if defined(__windows__)
+ssize_t pread(int fd, void *buf, size_t count, off_t offset) {
+    assert(_lseek(fd, offset, SEEK_SET) == offset);
+    assert(_read(fd, buf, count) == count);
+}
 #endif
 
 static int32_t readpageindex(int fd, size_t off) {
