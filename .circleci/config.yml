@@ -1,6 +1,6 @@
-version: 2
+version: 2.1
 workflows:
-  version: 2
+  version: 2.1
   build:
     jobs:
       - build-linux
@@ -39,6 +39,10 @@ jobs:
             [ $BLOCKS_BEFORE -gt $BLOCKS_AFTER ] || exit 1; 
             sqlite3 test.sqlite 'PRAGMA check_integrity' || exit 2;
             
+      - persist_to_workspace:
+          paths:
+            - sqlite_sparse
+            
   build-windows:
     docker:
       - image: debian:stretch
@@ -54,3 +58,7 @@ jobs:
           name: Build
           command: x86_64-w64-mingw32-gcc -O2 -flto -static -o sqlite_sparse.exe sqlite_sparse.c -lws2_32
           
+      - persist_to_workspace:
+          paths:
+            - sqlite_sparse.exe
+            
