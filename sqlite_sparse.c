@@ -40,8 +40,9 @@
 #include <stdio.h>
 #include <string.h>
 #if defined(__windows__)
-#include <windows.h>
 #include <winsock2.h>
+#include <windows.h>
+#include <stdint.h>
 #elif defined(__linux__)
 #include <arpa/inet.h>
 #endif
