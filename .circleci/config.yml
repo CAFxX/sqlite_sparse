@@ -26,7 +26,10 @@ jobs:
             done;
             sqlite3 test.sqlite 'DELETE FROM t ORDER BY RANDOM() LIMIT (SELECT COUNT(*) FROM t)*9/10';
             stat test.sqlite;
+            BLOCKS_BEFORE=$(stat -c%b test.sqlite);
             ./sqlite_sparse test.sqlite;
             stat test.sqlite;
-            sqlite3 test.sqlite 'PRAGMA check_integrity'
+            BLOCKS_AFTER=$(stat -c%b test.sqlite);
+            [ $BLOCKS_BEFORE -gt $BLOCKS_AFTER ] || exit 1; 
+            sqlite3 test.sqlite 'PRAGMA check_integrity' || exit 2;
             
