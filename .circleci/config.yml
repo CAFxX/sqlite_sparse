@@ -52,5 +52,5 @@ jobs:
           
       - run:
           name: Build
-          command: x86_64-w64-mingw32-gcc -O2 -flto -lws2_32 -o sqlite_sparse sqlite_sparse.c
+          command: x86_64-w64-mingw32-gcc -O2 -flto -o sqlite_sparse sqlite_sparse.c -lws2_32
           
