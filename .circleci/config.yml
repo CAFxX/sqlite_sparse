@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  build:
+  build-linux:
     docker:
       - image: debian:stretch
 
@@ -33,3 +33,18 @@ jobs:
             [ $BLOCKS_BEFORE -gt $BLOCKS_AFTER ] || exit 1; 
             sqlite3 test.sqlite 'PRAGMA check_integrity' || exit 2;
             
+  build-windows:
+    docker:
+      - image: debian:stretch
+
+    steps:
+      - checkout
+
+      - run:
+          name: Install tools
+          command: apt update && apt install -y mingw-w64
+          
+      - run:
+          name: Build
+          command: gcc -O2 -flto -o sqlite_sparse sqlite_sparse.c
+          
