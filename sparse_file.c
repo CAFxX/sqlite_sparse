@@ -5,6 +5,7 @@
 // into a sparse file by deallocating all sqlite3 free pages in the
 // file. The filesystem containing the sqlite3 file must support
 // sparse files creation via fallocate(FALLOC_FL_PUNCH_HOLE).
+// Windows support is implemented, but untested.
 //
 // Compile with: gcc -O2 -o sqlite_sparse sqlite_sparse.c
 // Usage:
@@ -24,7 +25,14 @@
 // IMPORTANT: Make a backup of your sqlite3 file before running
 // sqlite_sparse, and run the sqlite `PRAGMA integrity_check;`.
 
+#if defined(_WIN32) || defined(_WIN64)
+#define __windows__
+#elif defined(__linux__)
 #define _GNU_SOURCE
+#else
+#error "Only Linux and Windows are supported"
+#endif
+
 #include <fcntl.h>
 #include <arpa/inet.h>
 #include <assert.h>
@@ -32,6 +40,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#ifdef __windows__
+#include <Windows.h>
+#endif
 
 static int32_t readpageindex(int fd, size_t off) {
     uint32_t v;
@@ -72,6 +83,11 @@ int main(int argc, char **argv) {
     size_t pagesize = readpagesize(fd);
     int32_t freelistpage = readpageindex(fd, 32);
 
+#ifdef __windows__
+    HANDLE h = (HANDLE)_get_osfhandle(fd);
+    int sparse = 0;
+#endif
+
     while (freelistpage > 1) {
         size_t pageoff = (freelistpage-1)*pagesize;
         int32_t L = readpageindex(fd, pageoff+4);
@@ -81,7 +97,17 @@ int main(int argc, char **argv) {
             int32_t freepage = readpageindex(fd, pageoff+(i+2)*4);
             assert(freepage > 1);
             // printf("Deallocating page %d\n", freepage);
+#if defined(__windows__)
+            DWORD unused;
+            if (!sparse) {
+                assert(DeviceIoControl(h, FSCTL_SET_SPARSE, NULL, 0, NULL, 0, &unused, NULL));
+                sparse = 1;
+            }
+            FILE_ZERO_DATA_INFORMATION fzdi = {pagesize*(freepage-1), pagesize*freepage};
+            assert(DeviceIoControl(h, FSCTL_SET_ZERO_DATA, &fzdi, sizeof(fzdi), NULL, 0, &unused, NULL));
+#elif defined(__linux__)
             assert(fallocate(fd, FALLOC_FL_PUNCH_HOLE|FALLOC_FL_KEEP_SIZE, pagesize*(freepage-1), pagesize) == 0);
+#endif
         }
         freelistpage = readpageindex(fd, pageoff+0);
     }
