@@ -34,14 +34,16 @@
 #endif
 
 #include <fcntl.h>
-#include <arpa/inet.h>
 #include <assert.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#ifdef __windows__
+#if defined(__windows__)
 #include <Windows.h>
+#include <Winsock2.h>
+#elif defined(__linux__)
+#include <arpa/inet.h>
 #endif
 
 static int32_t readpageindex(int fd, size_t off) {
