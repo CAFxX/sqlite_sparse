@@ -4,6 +4,8 @@ into a sparse file by deallocating all SQLite3 free pages in the
 file. The filesystem containing the SQLite3 file must support
 sparse files creation via `fallocate(FALLOC_FL_PUNCH_HOLE)`.
 
+[![CircleCI](https://circleci.com/gh/CAFxX/sqlite_sparse/tree/master.svg?style=svg)](https://circleci.com/gh/CAFxX/sqlite_sparse/tree/master)
+
 ## Rationale
 `VACUUM`ing a SQLite3 database to release the free pages can take
 a very long time if the file is big. On the contrary, deallocating
