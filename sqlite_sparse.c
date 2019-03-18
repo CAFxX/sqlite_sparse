@@ -115,7 +115,11 @@ int main(int argc, char **argv) {
                 sparse = 1;
             }
             FILE_ZERO_DATA_INFORMATION fzdi = {pagesize*(freepage-1), pagesize*freepage};
-            assert(DeviceIoControl(h, FSCTL_SET_ZERO_DATA, &fzdi, sizeof(fzdi), NULL, 0, &unused, NULL));
+            //assert(DeviceIoControl(h, FSCTL_SET_ZERO_DATA, &fzdi, sizeof(fzdi), NULL, 0, &unused, NULL));
+            if (DeviceIoControl(h, FSCTL_SET_ZERO_DATA, &fzdi, sizeof(fzdi), NULL, 0, &unused, NULL) == 0) {
+                printf("%x\n", GetLastError());
+                assert(0);
+            }
 #elif defined(__linux__)
             assert(fallocate(fd, FALLOC_FL_PUNCH_HOLE|FALLOC_FL_KEEP_SIZE, pagesize*(freepage-1), pagesize) == 0);
 #endif
