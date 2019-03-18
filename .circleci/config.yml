@@ -15,7 +15,7 @@ jobs:
 
       - run:
           name: Install tools
-          command: apt update && apt install -y build-essential sqlite3
+          command: apt update && apt install -y build-essential sqlite3 ca-certificates
           
       - run:
           name: Build
@@ -52,7 +52,7 @@ jobs:
 
       - run:
           name: Install tools
-          command: apt update && apt install -y mingw-w64
+          command: apt update && apt install -y mingw-w64 ca-certificates
           
       - run:
           name: Build
