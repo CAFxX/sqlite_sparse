@@ -114,7 +114,9 @@ int main(int argc, char **argv) {
                 assert(DeviceIoControl(h, FSCTL_SET_SPARSE, NULL, 0, NULL, 0, &unused, NULL));
                 sparse = 1;
             }
-            FILE_ZERO_DATA_INFORMATION fzdi = {pagesize*(freepage-1), pagesize*freepage};
+            FILE_ZERO_DATA_INFORMATION fzdi;
+            fzdi.FileOffset = pagesize*(freepage-1);
+            fzdi.BeyondFinalZero = pagesize*freepage;
             //assert(DeviceIoControl(h, FSCTL_SET_ZERO_DATA, &fzdi, sizeof(fzdi), NULL, 0, &unused, NULL));
             if (DeviceIoControl(h, FSCTL_SET_ZERO_DATA, &fzdi, sizeof(fzdi), NULL, 0, &unused, NULL) == 0) {
                 printf("%x\n", GetLastError());
