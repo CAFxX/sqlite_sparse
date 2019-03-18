@@ -38,7 +38,10 @@ jobs:
             BLOCKS_AFTER=$(stat -c%b test.sqlite);
             [ $BLOCKS_BEFORE -gt $BLOCKS_AFTER ] || exit 1; 
             sqlite3 test.sqlite 'PRAGMA check_integrity' || exit 2;
-            
+
+      - store_artifacts:
+          path: ./sqlite_sparse
+          destination: sqlite_sparse
             
   build-windows:
     docker:
@@ -54,3 +57,7 @@ jobs:
       - run:
           name: Build
           command: x86_64-w64-mingw32-gcc -O2 -flto -static -o sqlite_sparse.exe sqlite_sparse.c -lws2_32
+
+      - store_artifacts:
+          path: ./sqlite_sparse.exe
+          destination: sqlite_sparse.exe
