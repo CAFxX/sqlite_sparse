@@ -93,6 +93,7 @@ int main(int argc, char **argv) {
 
     size_t pagesize = readpagesize(fd);
     int32_t freelistpage = readpageindex(fd, 32);
+    size_t freed = 0;
 
 #ifdef __windows__
     HANDLE h = (HANDLE)_get_osfhandle(fd);
@@ -117,15 +118,14 @@ int main(int argc, char **argv) {
             FILE_ZERO_DATA_INFORMATION fzdi;
             fzdi.FileOffset.QuadPart = pagesize*(freepage-1);
             fzdi.BeyondFinalZero.QuadPart = pagesize*freepage;
-            //assert(DeviceIoControl(h, FSCTL_SET_ZERO_DATA, &fzdi, sizeof(fzdi), NULL, 0, &unused, NULL));
-            if (DeviceIoControl(h, FSCTL_SET_ZERO_DATA, &fzdi, sizeof(fzdi), NULL, 0, &unused, NULL) == 0) {
-                printf("%x\n", GetLastError());
-                assert(0);
-            }
+            assert(DeviceIoControl(h, FSCTL_SET_ZERO_DATA, &fzdi, sizeof(fzdi), NULL, 0, &unused, NULL));
 #elif defined(__linux__)
             assert(fallocate(fd, FALLOC_FL_PUNCH_HOLE|FALLOC_FL_KEEP_SIZE, pagesize*(freepage-1), pagesize) == 0);
 #endif
+            freed++;
         }
         freelistpage = readpageindex(fd, pageoff+0);
     }
+    
+    printf("Deallocated %d pages (%d bytes)\n", freed, freed*pagesize);
 }
