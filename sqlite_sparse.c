@@ -50,6 +50,7 @@
 
 #if defined(__windows__)
 static ssize_t pread(int fd, void *buf, size_t count, off_t offset) {
+    printf("%d %d\n", offset, count);
     assert(_lseek(fd, offset, SEEK_SET) == offset);
     return _read(fd, buf, count);
 }
