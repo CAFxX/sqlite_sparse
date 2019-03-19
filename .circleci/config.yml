@@ -31,17 +31,24 @@ jobs:
               sqlite3 test.sqlite 'INSERT INTO t (a, b) SELECT RANDOM(), b FROM t';
             done;
             sqlite3 test.sqlite 'DELETE FROM t ORDER BY RANDOM() LIMIT (SELECT COUNT(*) FROM t)*9/10';
+            
+            cp test.sqlite test.sqlite.sparse;
+            ./sqlite_sparse test.sqlite.sparse;
+            
             stat test.sqlite;
             BLOCKS_BEFORE=$(stat -c%b test.sqlite);
-            ./sqlite_sparse test.sqlite;
-            stat test.sqlite;
-            BLOCKS_AFTER=$(stat -c%b test.sqlite);
+            stat test.sqlite.sparse;
+            BLOCKS_AFTER=$(stat -c%b test.sqlite.sparse);
             [ $BLOCKS_BEFORE -gt $BLOCKS_AFTER ] || exit 1; 
-            sqlite3 test.sqlite 'PRAGMA check_integrity' || exit 2;
+            sqlite3 test.sqlite.sparse 'PRAGMA check_integrity' || exit 2;
 
       - store_artifacts:
           path: ./sqlite_sparse
           destination: sqlite_sparse
+          
+      - store_artifacts:
+          path: ./test.sqlite
+          destination: test.sqlite
             
   build-windows:
     docker:
