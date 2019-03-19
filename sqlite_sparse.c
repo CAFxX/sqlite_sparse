@@ -57,7 +57,7 @@ static ssize_t pread(int fd, void *buf, size_t count, off_t offset) {
 #define O_BINARY 0
 #endif
 
-static int32_t numpages(int fd, size_t pagesize) {
+static int32_t getnumpages(int fd, size_t pagesize) {
     off_t off = lseek(fd, 0, SEEK_END);
     assert(off != -1);
     assert(off % pagesize == 0);
@@ -126,7 +126,7 @@ int main(int argc, char **argv) {
 #endif
 
     int32_t first = -1;
-    for (i = 0; i < pages+1; i++) {
+    for (int32_t i = 0; i < pages+1; i++) {
         if (first == -1 && (bitmap[i/8]&(1<<(i%8)) == 1)) {
             first = i;
         } else if (first != -1 && (bitmap[i/8]&(1<<(i%8)) == 0)) {
