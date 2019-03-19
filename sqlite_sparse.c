@@ -51,9 +51,7 @@
 #if defined(__windows__)
 static ssize_t pread(int fd, void *buf, size_t count, off_t offset) {
     assert(_lseek(fd, offset, SEEK_SET) == offset);
-    ssize_t r = _read(fd, buf, count);
-    printf("%d %d %d\n", offset, count, r);
-    return r;
+    return _read(fd, buf, count);
 }
 #elif defined(__linux__)
 #define O_BINARY 0
