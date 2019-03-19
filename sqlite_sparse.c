@@ -86,6 +86,19 @@ static void checkheader(int fd) {
     assert(memcmp(buf, "SQLite format 3", 16) == 0);
 }
 
+static void deallocate(int fd, off_t offset, off_t count) {
+#if defined(__windows__)
+    DWORD unused;
+    assert(DeviceIoControl(_get_osfhandle(fd), FSCTL_SET_SPARSE, NULL, 0, NULL, 0, &unused, NULL));
+    FILE_ZERO_DATA_INFORMATION fzdi;
+    fzdi.FileOffset.QuadPart = offset;
+    fzdi.BeyondFinalZero.QuadPart = offset+count;
+    assert(DeviceIoControl(_get_osfhandle(fd), FSCTL_SET_ZERO_DATA, &fzdi, sizeof(fzdi), NULL, 0, &unused, NULL));
+#elif defined(__linux__)
+    assert(fallocate(fd, FALLOC_FL_PUNCH_HOLE|FALLOC_FL_KEEP_SIZE, offset, count) == 0);
+#endif
+}
+
 int main(int argc, char **argv) {
     assert(argc == 2);
     int fd = open(argv[1], O_RDWR|O_BINARY);
@@ -97,32 +110,14 @@ int main(int argc, char **argv) {
     int32_t freelistpage = readpageindex(fd, 32);
     size_t freed = 0;
 
-#ifdef __windows__
-    int sparse = 0;
-#endif
-
     while (freelistpage > 1) {
         size_t pageoff = (freelistpage-1)*pagesize;
         int32_t L = readpageindex(fd, pageoff+4);
-        // printf("freelistpage %d, L %d\n", freelistpage, L);
         assert((L+2)*4 < pagesize);
         for (int i = 0; i < L; i++) {
             int32_t freepage = readpageindex(fd, pageoff+(i+2)*4);
             assert(freepage > 1);
-            // printf("Deallocating page %d\n", freepage);
-#if defined(__windows__)
-            DWORD unused;
-            if (sparse == 0) {
-                assert(DeviceIoControl(_get_osfhandle(fd), FSCTL_SET_SPARSE, NULL, 0, NULL, 0, &unused, NULL));
-                sparse = 1;
-            }
-            FILE_ZERO_DATA_INFORMATION fzdi;
-            fzdi.FileOffset.QuadPart = pagesize*(freepage-1);
-            fzdi.BeyondFinalZero.QuadPart = pagesize*freepage;
-            assert(DeviceIoControl(_get_osfhandle(fd), FSCTL_SET_ZERO_DATA, &fzdi, sizeof(fzdi), NULL, 0, &unused, NULL));
-#elif defined(__linux__)
-            assert(fallocate(fd, FALLOC_FL_PUNCH_HOLE|FALLOC_FL_KEEP_SIZE, pagesize*(freepage-1), pagesize) == 0);
-#endif
+            deallocate(fd, pagesize*(freepage-1), pagesize);
             freed++;
         }
         freelistpage = readpageindex(fd, pageoff+0);
