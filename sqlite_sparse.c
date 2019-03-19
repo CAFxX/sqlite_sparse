@@ -51,7 +51,7 @@
 #if defined(__windows__)
 static ssize_t pread(int fd, void *buf, size_t count, off_t offset) {
     assert(_lseek(fd, offset, SEEK_SET) == offset);
-    assert(_read(fd, buf, count) == count);
+    return _read(fd, buf, count);
 }
 #endif
 
