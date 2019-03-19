@@ -55,6 +55,8 @@ static ssize_t pread(int fd, void *buf, size_t count, off_t offset) {
     printf("%d %d %d\n", offset, count, r);
     return r;
 }
+#elif defined(__linux__)
+#define O_BINARY 0
 #endif
 
 static int32_t readpageindex(int fd, size_t off) {
@@ -88,7 +90,7 @@ static void checkheader(int fd) {
 
 int main(int argc, char **argv) {
     assert(argc == 2);
-    int fd = open(argv[1], O_RDWR);
+    int fd = open(argv[1], O_RDWR|O_BINARY);
     assert(fd != -1);
 
     checkheader(fd);
