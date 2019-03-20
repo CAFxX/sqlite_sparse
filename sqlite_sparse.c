@@ -89,11 +89,12 @@ static void checkheader(int fd) {
 static void deallocate(int fd, off_t offset, off_t count) {
 #if defined(__windows__)
     DWORD unused;
-    assert(DeviceIoControl(_get_osfhandle(fd), FSCTL_SET_SPARSE, NULL, 0, NULL, 0, &unused, NULL));
+    HANDLE h = (HANDLE)_get_osfhandle(fd);
+    assert(DeviceIoControl(h, FSCTL_SET_SPARSE, NULL, 0, NULL, 0, &unused, NULL));
     FILE_ZERO_DATA_INFORMATION fzdi;
     fzdi.FileOffset.QuadPart = offset;
     fzdi.BeyondFinalZero.QuadPart = offset+count;
-    assert(DeviceIoControl(_get_osfhandle(fd), FSCTL_SET_ZERO_DATA, &fzdi, sizeof(fzdi), NULL, 0, &unused, NULL));
+    assert(DeviceIoControl(h, FSCTL_SET_ZERO_DATA, &fzdi, sizeof(fzdi), NULL, 0, &unused, NULL));
 #elif defined(__linux__)
     assert(fallocate(fd, FALLOC_FL_PUNCH_HOLE|FALLOC_FL_KEEP_SIZE, offset, count) == 0);
 #endif
