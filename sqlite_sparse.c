@@ -1,7 +1,7 @@
 // sqlite_sparse.c
 // 2019 Carlo Alberto Ferraris <cafxx@strayorange.com>
 //
-// A small linux-only utility that turns in-place a sqlite3 file
+// A small utility that turns in-place a sqlite3 file
 // into a sparse file by deallocating all sqlite3 free pages in the
 // file. The filesystem containing the sqlite3 file must support
 // sparse files creation via fallocate(FALLOC_FL_PUNCH_HOLE).
@@ -27,10 +27,10 @@
 
 #if defined(_WIN32) || defined(_WIN64)
 #define __windows__
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__APPLE__)
 #define _GNU_SOURCE
 #else
-#error "Only Linux and Windows are supported"
+#error "Only Linux, Windows and MacOS are supported"
 #endif
 
 #include <fcntl.h>
@@ -44,7 +44,7 @@
 #include <windows.h>
 #include <stdint.h>
 #include <io.h>
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__APPLE__)
 #include <arpa/inet.h>
 #endif
 
@@ -53,7 +53,7 @@ static ssize_t pread(int fd, void *buf, size_t count, off_t offset) {
     assert(_lseek(fd, offset, SEEK_SET) == offset);
     return _read(fd, buf, count);
 }
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__APPLE__)
 #define O_BINARY 0
 #endif
 
@@ -101,6 +101,10 @@ int main(int argc, char **argv) {
     int sparse = 0;
 #endif
 
+#if defined(__APPLE__)
+    fpunchhole_t punchhole;
+#endif
+
     while (freelistpage > 1) {
         size_t pageoff = (freelistpage-1)*pagesize;
         int32_t L = readpageindex(fd, pageoff+4);
@@ -122,6 +126,12 @@ int main(int argc, char **argv) {
             assert(DeviceIoControl(_get_osfhandle(fd), FSCTL_SET_ZERO_DATA, &fzdi, sizeof(fzdi), NULL, 0, &unused, NULL));
 #elif defined(__linux__)
             assert(fallocate(fd, FALLOC_FL_PUNCH_HOLE|FALLOC_FL_KEEP_SIZE, pagesize*(freepage-1), pagesize) == 0);
+#elif defined(__APPLE__)
+            punchhole.fp_flags = 0;
+            punchhole.reserved = 0;
+            punchhole.fp_offset = pagesize*(freepage-1);
+            punchhole.fp_length = pagesize;
+            assert(fcntl(fd, F_PUNCHHOLE, &punchhole) == 0);
 #endif
             freed++;
         }
